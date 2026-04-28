@@ -40,10 +40,26 @@ public class BookController {
     }
 
     @GetMapping("/filter/{bookFilter}")
-    public String requestBooksByFilter(@MatrixVariable(pathVar = "bookFilter")Map<String, List<String>> bookFilter, Model model){
+    public String requestBooksByFilter(@MatrixVariable(pathVar = "bookFilter") Map<String, List<String>> bookFilter, Model model){
         Set<Book> booksByFilter = bookService.getBookListByFilter(bookFilter);
-        model.addAttribute("booklist", booksByFilter);
+        model.addAttribute("bookList", booksByFilter);
         return "books";
+    }
+
+    @GetMapping("/add")
+    public String requestAddBookForm(){
+        return "addBook";
+    }
+
+    @PostMapping("/add")
+    public String submitAddNewBook(@ModelAttribute Book book){
+        bookService.setNewBook(book);
+        return "redirect:/books";
+    }
+
+    @ModelAttribute
+    public void addAddtributes(Model model){
+        model.addAttribute("addTitle", "신규 도서 등록");
     }
 
 
