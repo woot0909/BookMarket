@@ -1,13 +1,24 @@
 package kr.ac.kopo.juns.bookmarket.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import kr.ac.kopo.juns.bookmarket.domain.Book;
 import kr.ac.kopo.juns.bookmarket.service.BookService;
+import org.apache.juli.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +28,9 @@ import java.util.Set;
 public class BookController {
     @Autowired
     private BookService bookService;
+
+    @Value("${file.uploadDir}")
+    String fileDir;
 
     @RequestMapping(method = RequestMethod.GET)
     public String requestBookList(Model model){
@@ -47,12 +61,28 @@ public class BookController {
     }
 
     @GetMapping("/add")
-    public String requestAddBookForm(){
+    public String requestAddBookForm(Model model){
+        model.addAttribute("book", new Book());
         return "addBook";
     }
 
     @PostMapping("/add")
-    public String submitAddNewBook(@ModelAttribute Book book){
+    public String submitAddNewBook(@Valid @ModelAttribute Book book, BindingResult bindingResult){
+        if (bindingResult.hasErrors())
+            return "addBook";
+
+        MultipartFile bookImage = book.getBookImage();
+        System.out.println("파일사이즈" + bookImage.getSize());
+        String saveName = bookImage.getOriginalFilename();
+        File saveFile = new File(fileDir, saveName);
+        if (bookImage != null && !bookImage.isEmpty()){
+            try {
+                bookImage.transferTo(saveFile);
+            } catch (IOException e) {
+                throw new RuntimeException("이미지가 업로드 되지 않았습니다.");
+            }
+        }
+        book.setFileName(saveName);
         bookService.setNewBook(book);
         return "redirect:/books";
     }
@@ -62,6 +92,26 @@ public class BookController {
         model.addAttribute("addTitle", "신규 도서 등록");
     }
 
+
+    @GetMapping("/download")
+    public void downloadBookImage(@RequestParam("file") String paramKey, HttpServletResponse response){
+        File imgFile = new File(fileDir + paramKey);
+
+        response.setContentType("application/download");
+        response.setContentLength((int)imgFile.length());
+        response.setHeader("Content-Disposition", "attachment;filename=\"" + paramKey + "\"");
+
+        try {
+            OutputStream out = response.getOutputStream();
+            FileInputStream fileIn = new FileInputStream(imgFile);
+            FileCopyUtils.copy(fileIn, out);
+            fileIn.close();
+            out.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 
     @GetMapping("/all")
     public ModelAndView requestAllBooks(){
