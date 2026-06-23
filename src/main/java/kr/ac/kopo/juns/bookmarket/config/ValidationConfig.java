@@ -1,5 +1,6 @@
 package kr.ac.kopo.juns.bookmarket.config;
 
+
 import kr.ac.kopo.juns.bookmarket.validator.BookValidator;
 import kr.ac.kopo.juns.bookmarket.validator.UnitsInStockValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ public class ValidationConfig {
     UnitsInStockValidator unitsInStockValidator;
 
     @Bean
-    public BookValidator bookValidator(){
+    public BookValidator bookValidator() {
         BookValidator bookValidator = new BookValidator();
         bookValidator.springValidators.add(unitsInStockValidator);
         return bookValidator;
