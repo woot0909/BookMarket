@@ -1,7 +1,5 @@
 package kr.ac.kopo.juns.bookmarket.config;
 
-
-import org.springframework.beans.factory.BeanRegistrarDslMarker;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -35,15 +33,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    protected  SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         authorizeRequests -> authorizeRequests
                                 .requestMatchers("/books/add").hasRole("ADMIN")
+                                .requestMatchers("/order/list").hasRole("ADMIN")
                                 .anyRequest().permitAll()
                 )
                 .formLogin(
-                        formLogin -> formLogin
+                        formLogin->formLogin
                                 .loginPage("/login")
                                 .loginProcessingUrl("/login")
                                 .defaultSuccessUrl("/books/add")
@@ -52,12 +51,10 @@ public class SecurityConfig {
                                 .passwordParameter("password")
                 )
                 .logout(
-                        logout -> logout
+                        longout -> longout
                                 .logoutUrl("/logout")
                                 .logoutSuccessUrl("/login")
                 );
-        return http.build();
-
+        return  http.build();
     }
-
 }
